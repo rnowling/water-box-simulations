@@ -91,8 +91,11 @@ def simulate(conf):
 
     simulation.step(sim_conf["steps"])
 
-    positions = simulation.context.getState(getPositions=True).getPositions()
-    PDBFile.writeFile(pdb.topology, pdb.positions, open(output_conf["structure"], "w"))
+    state = simulation.context.getState(getPositions=True, getVelocities=True)
+    positions = state.getPositions()
+    velocities = state.getVelocities() * 1.0 * picoseconds
+    PDBFile.writeFile(pdb.topology, positions, open(output_conf["structure"], "w"))
+    PDBFile.writeFile(pdb.topology, velocities, open(output_conf["velocities"], "w"))
     
 if __name__ == "__main__":
     sim_fl = sys.argv[1]
