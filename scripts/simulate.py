@@ -69,21 +69,24 @@ def simulate(conf):
                                                 kineticEnergy=True, potentialEnergy=True,
                                                 temperature=True))
     for output_type, flname in output_conf.iteritems():
+        print output_type, flname
         if output_type == "period":
             continue
-
-        if output_type == "steps":
+        elif output_type == "steps":
             continue
-
-        if output_type == "trajectory":
+        elif output_type == "structure":
+            continue
+        elif output_type == "trajectory":
             reporter = DCDReporter(flname, output_period)
-
-        if output_type == "statistics":
-            reporter = StateDataReporter(flname, output_period, step=True, time=True, kineticEnergy=True,
-                                         volume=True, density=True, speed=True,
-                                         potentialEnergy=True, temperature=True)
+        elif output_type == "statistics":
+            reporter = StateDataReporter(open(flname, "w"), output_period, step=True, time=True, kineticEnergy=True,
+                                         speed=True, potentialEnergy=True, temperature=True)
+        else:
+            print "Print unknown output", output_type
 
         simulation.reporters.append(reporter)
+
+    print len(simulation.reporters), "reporters"
 
 
     simulation.step(sim_conf["steps"])
