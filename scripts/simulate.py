@@ -46,8 +46,9 @@ def simulate(conf):
     int_conf = conf["simulation"]["integrator"]
     bc_conf = sim_conf["boundaryconditions"]
     output_conf = conf["output"]
+    input_conf = conf["input"]
 
-    pdb = PDBFile(conf["input"])
+    pdb = PDBFile(input_conf["positions"])
 
     forcefield = ForceField(*sim_conf["forcefields"])
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=bc_conf["type"],
@@ -62,7 +63,16 @@ def simulate(conf):
         
     simulation = Simulation(pdb.topology, system, integrator)
     simulation.context.setPositions(pdb.positions)
-    simulation.context.setVelocitiesToTemperature(sim_conf["initialtemperature"])
+    
+    if "initialtemperature" in sim_conf:
+        simulation.context.setVelocitiesToTemperature(sim_conf["initialtemperature"])
+    elif "velocities" in input_conf:
+        vel_pdb = PDBFile(input_conf["velocities"])
+        velocities = vel_pdb.positions / picoseconds
+        simulation.context.setVelocities(velocities)
+    else:
+        print "No method for initializing velocities found"
+        sys.exit(1)
 
     output_period = output_conf["steps"]
     simulation.reporters.append(StateDataReporter(stdout, output_period, step=True, time=True,
@@ -75,6 +85,8 @@ def simulate(conf):
         elif output_type == "steps":
             continue
         elif output_type == "structure":
+            continue
+        elif output_type == "velocities":
             continue
         elif output_type == "trajectory":
             reporter = DCDReporter(flname, output_period)
